@@ -72,7 +72,7 @@ public class QGBuilderIT {
         setGlobalConfigDataAndJobConfigDataNames(TEST_NAME, TEST_NAME);
         jobConfigData.setProjectKey("projectKey");
         doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(globalConfig, jobConfigData);
-        doReturn(true).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
+        doReturn(Result.SUCCESS).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
         jenkinsRule.buildAndAssertSuccess(freeStyleProject);
         Run lastRun = freeStyleProject._getRuns().newestValue();
         jenkinsRule.assertLogContains("build passed: TRUE", lastRun);
@@ -83,8 +83,31 @@ public class QGBuilderIT {
         setGlobalConfigDataAndJobConfigDataNames("","");
         jobConfigData.setProjectKey("projectKey");
         doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(globalConfig, jobConfigData);
-        doReturn(true).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
+        doReturn(Result.SUCCESS).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
         jenkinsRule.buildAndAssertSuccess(freeStyleProject);
+        Run lastRun = freeStyleProject._getRuns().newestValue();
+        jenkinsRule.assertLogContains(JobExecutionService.DEFAULT_CONFIGURATION_WARNING, lastRun);
+        jenkinsRule.assertLogContains("build passed: TRUE", lastRun);
+    }
+
+    @Test
+    public void testPerformShouldSucceedUnstableWithNoWarning() throws Exception {
+        setGlobalConfigDataAndJobConfigDataNames(TEST_NAME, TEST_NAME);
+        jobConfigData.setProjectKey("projectKey");
+        doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(globalConfig, jobConfigData);
+        doReturn(Result.UNSTABLE).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
+        jenkinsRule.assertBuildStatus(Result.UNSTABLE, buildProject(freeStyleProject));
+        Run lastRun = freeStyleProject._getRuns().newestValue();
+        jenkinsRule.assertLogContains("build passed: TRUE", lastRun);
+    }
+
+    @Test
+    public void testPerformShouldSucceedUnstableWithWarning() throws Exception {
+        setGlobalConfigDataAndJobConfigDataNames("","");
+        jobConfigData.setProjectKey("projectKey");
+        doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(globalConfig, jobConfigData);
+        doReturn(Result.UNSTABLE).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
+        jenkinsRule.assertBuildStatus(Result.UNSTABLE, buildProject(freeStyleProject));
         Run lastRun = freeStyleProject._getRuns().newestValue();
         jenkinsRule.assertLogContains(JobExecutionService.DEFAULT_CONFIGURATION_WARNING, lastRun);
         jenkinsRule.assertLogContains("build passed: TRUE", lastRun);
@@ -95,7 +118,7 @@ public class QGBuilderIT {
         setGlobalConfigDataAndJobConfigDataNames(TEST_NAME, TEST_NAME);
         jobConfigData.setProjectKey("projectKey");
         doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(globalConfig, jobConfigData);
-        doReturn(false).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
+        doReturn(Result.FAILURE).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class),any(JobConfigData.class));
         jenkinsRule.assertBuildStatus(Result.FAILURE, buildProject(freeStyleProject));
         Run lastRun = freeStyleProject._getRuns().newestValue();
         jenkinsRule.assertLogContains("build passed: FALSE", lastRun);

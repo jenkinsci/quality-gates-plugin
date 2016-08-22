@@ -20,7 +20,7 @@ public class JobConfigurationService {
     }
 
     public JobConfigData createJobConfigData(JSONObject formData, GlobalConfig globalConfig) {
-        JobConfigData firstInstanceJobConfigData = new JobConfigData();
+    	JobConfigData firstInstanceJobConfigData = new JobConfigData();
         String projectKey = formData.getString("projectKey");
         if(projectKey.startsWith("$"))
         {
@@ -46,8 +46,14 @@ public class JobConfigurationService {
         else {
             name = "";
         }
+        boolean ignoreWarnings = false;
+        if (formData.containsKey("ignoreWarnings")) {
+        	ignoreWarnings = formData.getBoolean("ignoreWarnings");
+        }
+        
         firstInstanceJobConfigData.setProjectKey(projectKey);
         firstInstanceJobConfigData.setSonarInstanceName(name);
+        firstInstanceJobConfigData.setIgnoreWarnings(ignoreWarnings);
         return firstInstanceJobConfigData;
     }
 
@@ -64,6 +70,7 @@ public class JobConfigurationService {
         JobConfigData envVariableJobConfigData = new JobConfigData();
         envVariableJobConfigData.setProjectKey(jobConfigData.getProjectKey());
         envVariableJobConfigData.setSonarInstanceName(jobConfigData.getSonarInstanceName());
+        envVariableJobConfigData.setIgnoreWarnings(jobConfigData.getIgnoreWarnings());
         if(jobConfigData.getProjectKey().isEmpty()) {
             throw new QGException("Empty project key.");
         }

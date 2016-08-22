@@ -49,7 +49,7 @@ public class JobConfigurationServiceTest {
         formData = new JSONObject();
         formData.put("projectKey", "TestKey");
     }
-
+    
     @Test
     public void testGetListBoxModelShouldReturnOneInstance(){
         createGlobalConfigData();

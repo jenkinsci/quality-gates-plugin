@@ -33,18 +33,18 @@ public class QualityGateResponseParserTest {
     @Test
     public void testGetQualityGateResultFromJSONWithOneObjectShouldReturnStatusError() {
         String jsonArray = "[\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
-        assertEquals(new QualityGatesStatus("ERROR"), qualityGateResponseParser.getQualityGateResultFromJSON(jsonArray));
+        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArray));
     }
 
     @Test
     public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusOK() {
-        assertEquals(new QualityGatesStatus("OK"), qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString));
+        assertEquals(QualityGatesStatus.GREEN, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString));
     }
 
     @Test
     public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusError() {
         jsonArrayString = "[\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Red)\",\nc: \"Alert\",\ndt: \"2016-03-26T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Green (was Red)\",\nc: \"Alert\",\ndt: \"2016-03-25T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
-        assertEquals(new QualityGatesStatus("ERROR"), qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString));
+        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString));
     }
 
 
