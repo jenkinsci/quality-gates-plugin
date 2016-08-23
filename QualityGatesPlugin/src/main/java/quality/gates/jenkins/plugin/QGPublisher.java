@@ -55,7 +55,7 @@ public class QGPublisher extends Recorder {
         }
         return true;
     }
-    
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         try {
@@ -65,7 +65,7 @@ public class QGPublisher extends Recorder {
         }
         Result result = build.getResult();
         if (Result.SUCCESS != result) {
-        	listener.getLogger().println("Previous steps failed the build.\nResult is: " + result);
+            listener.getLogger().println("Previous steps failed the build.\nResult is: " + result);
             return false;
         }
         try {

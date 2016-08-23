@@ -9,7 +9,7 @@ import hudson.model.Result;
 
 public class BuildDecision {
 
-    QualityGatesProvider qualityGatesProvider;
+    private QualityGatesProvider qualityGatesProvider;
 
     public BuildDecision() {
         qualityGatesProvider = new QualityGatesProvider();
@@ -31,7 +31,7 @@ public class BuildDecision {
             throw new QGException("Please check your credentials or your Project Key", e);
         }
     }
-    
+
     public GlobalConfigDataForSonarInstance chooseSonarInstance (GlobalConfig globalConfig, JobConfigData jobConfigData) {
         GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance;
         if (globalConfig.fetchListOfGlobalConfigData().isEmpty()) {

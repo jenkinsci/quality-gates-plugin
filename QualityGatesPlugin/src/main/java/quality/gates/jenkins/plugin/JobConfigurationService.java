@@ -20,7 +20,7 @@ public class JobConfigurationService {
     }
 
     public JobConfigData createJobConfigData(JSONObject formData, GlobalConfig globalConfig) {
-    	JobConfigData firstInstanceJobConfigData = new JobConfigData();
+        JobConfigData firstInstanceJobConfigData = new JobConfigData();
         String projectKey = formData.getString("projectKey");
         if(projectKey.startsWith("$"))
         {
