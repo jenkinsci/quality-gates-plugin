@@ -9,7 +9,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class QGPublisher extends Recorder {
 
     private JobConfigData jobConfigData;
-    private BuildDecision buildDecision;
+    private transient BuildDecision buildDecision;
     private JobConfigurationService jobConfigurationService;
     private JobExecutionService jobExecutionService;
     private GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance;
