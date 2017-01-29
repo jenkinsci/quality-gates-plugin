@@ -25,7 +25,7 @@ public class SonarHttpRequester {
 
     private static final String SONAR_API_GATE = "/api/events?resource=%s&format=json&categories=Alert";
 
-    private HttpClientContext context;
+    private transient HttpClientContext context;
 
     public SonarHttpRequester() {
     }
