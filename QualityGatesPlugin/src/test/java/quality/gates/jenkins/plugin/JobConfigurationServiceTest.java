@@ -12,12 +12,17 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class JobConfigurationServiceTest {
 
@@ -44,7 +49,7 @@ public class JobConfigurationServiceTest {
     private BuildListener listener;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
         jobConfigurationService = new JobConfigurationService();
         formData = new JSONObject();
@@ -52,7 +57,8 @@ public class JobConfigurationServiceTest {
     }
 
     @Test
-    public void testGetListBoxModelShouldReturnOneInstance(){
+    public void testGetListBoxModelShouldReturnOneInstance() {
+
         createGlobalConfigData();
         globalConfigDataForSonarInstance.setName("First Instance");
         globalConfigDataForSonarInstances.add(globalConfigDataForSonarInstance);
@@ -62,13 +68,15 @@ public class JobConfigurationServiceTest {
     }
 
     @Test
-    public void testGetListBoxModelShouldReturnEmptyListBoxModel(){
+    public void testGetListBoxModelShouldReturnEmptyListBoxModel() {
+
         ListBoxModel returnList = jobConfigurationService.getListOfSonarInstanceNames(globalConfig);
         assertEquals("[]", returnList.toString());
     }
 
     @Test
-    public void testGetListBoxModelShouldReturnMoreInstance(){
+    public void testGetListBoxModelShouldReturnMoreInstance() {
+
         createGlobalConfigData();
         globalConfigDataForSonarInstance.setName("First Instance");
         globalConfigDataForSonarInstances.add(globalConfigDataForSonarInstance);
@@ -83,6 +91,7 @@ public class JobConfigurationServiceTest {
 
     @Test
     public void testNewInstanceSizeGreaterThanZeroAndDoesNotContainKey() {
+
         jobConfigData = new JobConfigData();
         jobConfigData.setProjectKey("TestKey");
         jobConfigData.setSonarInstanceName("TestName");
@@ -99,6 +108,7 @@ public class JobConfigurationServiceTest {
 
     @Test
     public void testNewInstanceSizeGreaterThanZeroAndContainsKey() {
+
         jobConfigData = new JobConfigData();
         jobConfigData.setProjectKey("TestKey");
         jobConfigData.setSonarInstanceName("TestName");
@@ -112,24 +122,27 @@ public class JobConfigurationServiceTest {
     }
 
     protected void createGlobalConfigData() {
+
         globalConfigDataForSonarInstances = new ArrayList<>();
         globalConfigDataForSonarInstance = new GlobalConfigDataForSonarInstance();
     }
 
     @Test
     public void testIfProjectKeyEmpty() throws Exception {
+
         String key = "";
         doReturn(key).when(jobConfigData).getProjectKey();
+
         try {
             jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
-        }
-        catch (QGException e) {
+        } catch (QGException e) {
             assertTrue(e.toString().contains("Empty project key."));
         }
     }
 
     @Test
     public void testIfProjectKeyStartsWithDolarSignAndVarIsFound() throws Exception {
+
         String key = "$PROJECT_KEY";
         doReturn(key).when(jobConfigData).getProjectKey();
         EnvVars envVars = mock(EnvVars.class);
@@ -141,21 +154,23 @@ public class JobConfigurationServiceTest {
 
     @Test
     public void testIfProjectKeyStartsWithDolarSignAndVarIsNotFound() throws Exception {
+
         String key = "$";
         doReturn(key).when(jobConfigData).getProjectKey();
         EnvVars envVars = mock(EnvVars.class);
         doReturn(envVars).when(build).getEnvironment(listener);
         doReturn(null).when(envVars).get(anyString());
+
         try {
             jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
-        }
-        catch (QGException e) {
+        } catch (QGException e) {
             assertTrue(e.toString().contains("Environment variable with name '' was not found."));
         }
     }
 
     @Test
     public void testIfProjectKeyStartsWithDolarSignAndHasBracketsVarIsFound() throws Exception {
+
         String key = "${PROJECT_KEY}";
         doReturn(key).when(jobConfigData).getProjectKey();
         EnvVars envVars = mock(EnvVars.class);
@@ -166,7 +181,8 @@ public class JobConfigurationServiceTest {
     }
 
     @Test
-    public void testNotEnvironmentVariable () {
+    public void testNotEnvironmentVariable() {
+
         String key = "NormalString";
         doReturn(key).when(jobConfigData).getProjectKey();
         JobConfigData returnedData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
@@ -174,7 +190,8 @@ public class JobConfigurationServiceTest {
     }
 
     @Test(expected = QGException.class)
-    public void testEnvironmentThrowsIOException () throws Exception {
+    public void testEnvironmentThrowsIOException() throws Exception {
+
         String key = "$";
         doReturn(key).when(jobConfigData).getProjectKey();
         IOException exception = mock(IOException.class);
@@ -183,11 +200,66 @@ public class JobConfigurationServiceTest {
     }
 
     @Test(expected = QGException.class)
-    public void testEnvironmentThrowsInterruptedException () throws Exception {
+    public void testEnvironmentThrowsInterruptedException() throws Exception {
+
         String key = "$";
         doReturn(key).when(jobConfigData).getProjectKey();
         InterruptedIOException exception = mock(InterruptedIOException.class);
         doThrow(exception).when(build).getEnvironment(listener);
         jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
+    }
+
+    @Test
+    public void resolveEmbeddedEnvVariablesWithoutBraces() throws Exception {
+
+        String key = "$PROJECT_KEY";
+        doReturn(key).when(jobConfigData).getProjectKey();
+        EnvVars envVars = mock(EnvVars.class);
+        doReturn(envVars).when(build).getEnvironment(listener);
+        doReturn("$FOO:$BAR").when(envVars).get("PROJECT_KEY");
+        doReturn("Foo-Value").when(envVars).get("FOO");
+        doReturn("Bar-Value").when(envVars).get("BAR");
+        JobConfigData returnedData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
+        assertTrue(returnedData.getProjectKey().equals("Foo-Value:Bar-Value"));
+    }
+
+    @Test(expected = QGException.class)
+    public void embeddedEnvVariablesNotFound() throws Exception {
+
+        String key = "${PROJECT_KEY}";
+        doReturn(key).when(jobConfigData).getProjectKey();
+        EnvVars envVars = mock(EnvVars.class);
+        doReturn(envVars).when(build).getEnvironment(listener);
+        doReturn(null).when(envVars).get("PROJECT_KEY");
+        jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
+    }
+
+    @Test
+    public void resolveEmbeddedEnvVariables() throws Exception {
+
+        String key = "${PROJECT_KEY}";
+        doReturn(key).when(jobConfigData).getProjectKey();
+        EnvVars envVars = mock(EnvVars.class);
+        doReturn(envVars).when(build).getEnvironment(listener);
+        doReturn("$FOO:$BAR").when(envVars).get("PROJECT_KEY");
+        doReturn("Foo-Value").when(envVars).get("FOO");
+        doReturn("Bar-Value").when(envVars).get("BAR");
+        JobConfigData returnedData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
+        assertTrue(returnedData.getProjectKey().equals("Foo-Value:Bar-Value"));
+    }
+
+    @Test
+    public void resolveMultiLevelEmbeddedEnvVariables() throws Exception {
+
+        String key = "${PROJECT_KEY}";
+        doReturn(key).when(jobConfigData).getProjectKey();
+        EnvVars envVars = mock(EnvVars.class);
+        doReturn(envVars).when(build).getEnvironment(listener);
+        doReturn("$FOO:$BAR").when(envVars).get("PROJECT_KEY");
+        doReturn("Foo-${VERSION}").when(envVars).get("FOO");
+        doReturn("Bar").when(envVars).get("BAR");
+        doReturn("12").when(envVars).get("VERSION");
+        JobConfigData returnedData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
+        assertTrue(returnedData.getProjectKey().equals("Foo-12:Bar"));
     }
 }
