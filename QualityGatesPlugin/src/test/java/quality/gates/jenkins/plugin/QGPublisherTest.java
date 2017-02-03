@@ -4,6 +4,8 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import quality.gates.sonar.api.QualityGatesStatus;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -80,7 +82,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultFail() {
         setBuildResult(Result.FAILURE);
-        buildDecisionShouldBe(false);
+        buildDecisionShouldBe(Result.FAILURE);
         assertFalse(publisher.perform(abstractBuild, launcher, buildListener));
         verifyZeroInteractions(buildDecision);
     }
@@ -88,9 +90,8 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultSuccessWithWarningForDefaultInstance() throws QGException {
         setBuildResult(Result.SUCCESS);
-        buildDecisionShouldBe(true);
+        buildDecisionShouldBe(Result.SUCCESS);
         doReturn("").when(jobConfigData).getSonarInstanceName();
-        doReturn(true).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class), any(JobConfigData.class));
         assertTrue(publisher.perform(abstractBuild, launcher, buildListener));
         verify(buildListener, times(2)).getLogger();
         PrintStream stream = buildListener.getLogger();
@@ -101,10 +102,35 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultSuccessWithNoWarning() throws QGException {
         setBuildResult(Result.SUCCESS);
-        buildDecisionShouldBe(true);
+        buildDecisionShouldBe(Result.SUCCESS);
         doReturn("SomeName").when(globalConfigDataForSonarInstance).getName();
         doReturn("someName").when(jobConfigData).getSonarInstanceName();
-        doReturn(true).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class), any(JobConfigData.class));
+        assertTrue(publisher.perform(abstractBuild, launcher, buildListener));
+        verify(buildListener, times(1)).getLogger();
+        PrintStream stream = buildListener.getLogger();
+        verify(stream).println(POST_BUILD_STEP_QUALITY_GATES_PLUGIN_BUILD_PASSED + "TRUE");
+    }
+
+    @Test
+    public void testPerformBuildResultUnstableWithWarningForDefaultInstance() throws QGException {
+        setBuildResult(Result.SUCCESS);
+        buildDecisionShouldBe(Result.UNSTABLE);
+        doReturn("").when(jobConfigData).getSonarInstanceName();
+        doReturn(true).when(jobConfigData).getIgnoreWarnings();
+        assertTrue(publisher.perform(abstractBuild, launcher, buildListener));
+        verify(buildListener, times(2)).getLogger();
+        PrintStream stream = buildListener.getLogger();
+        verify(stream).println(JobExecutionService.DEFAULT_CONFIGURATION_WARNING);
+        verify(stream).println(POST_BUILD_STEP_QUALITY_GATES_PLUGIN_BUILD_PASSED + "TRUE");
+    }
+
+    @Test
+    public void testPerformBuildResultUnstableWithNoWarning() throws QGException {
+        setBuildResult(Result.SUCCESS);
+        buildDecisionShouldBe(Result.UNSTABLE);
+        doReturn("SomeName").when(globalConfigDataForSonarInstance).getName();
+        doReturn("someName").when(jobConfigData).getSonarInstanceName();
+        doReturn(true).when(jobConfigData).getIgnoreWarnings();
         assertTrue(publisher.perform(abstractBuild, launcher, buildListener));
         verify(buildListener, times(1)).getLogger();
         PrintStream stream = buildListener.getLogger();
@@ -114,7 +140,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultFailWithWarningForDefaultInstance() throws QGException {
         setBuildResult(Result.SUCCESS);
-        buildDecisionShouldBe(false);
+        buildDecisionShouldBe(Result.FAILURE);
         when(jobConfigData.getSonarInstanceName()).thenReturn("");
         assertFalse(publisher.perform(abstractBuild, launcher, buildListener));
         verify(buildListener, times(2)).getLogger();
@@ -126,7 +152,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultFailWithNoWarning() throws QGException {
         setBuildResult(Result.SUCCESS);
-        buildDecisionShouldBe(false);
+        buildDecisionShouldBe(Result.FAILURE);
         doReturn("SomeName").when(globalConfigDataForSonarInstance).getName();
         assertFalse(publisher.perform(abstractBuild, launcher, buildListener));
         verify(buildListener, times(1)).getLogger();
@@ -142,9 +168,9 @@ public class QGPublisherTest {
         assertFalse(publisher.perform(abstractBuild, launcher, buildListener));
         verify(exception, times(1)).printStackTrace(printStream);
     }
-
-    private void buildDecisionShouldBe(boolean toBeReturned) throws QGException {
-        when(buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData)).thenReturn(toBeReturned);
+    
+    private void buildDecisionShouldBe(Result toBeReturned) throws QGException {
+        doReturn(toBeReturned).when(buildDecision).getStatus(any(GlobalConfigDataForSonarInstance.class), any(JobConfigData.class));
     }
 
     private void setBuildResult(Result result) {

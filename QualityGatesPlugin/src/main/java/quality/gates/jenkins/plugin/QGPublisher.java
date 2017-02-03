@@ -1,3 +1,4 @@
+
 package quality.gates.jenkins.plugin;
 
 import hudson.Launcher;
@@ -67,14 +68,18 @@ public class QGPublisher extends Recorder {
             listener.getLogger().println("Previous steps failed the build.\nResult is: " + result);
             return false;
         }
-        boolean buildPassed;
         try {
             JobConfigData checkedJobConfigData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
-            buildPassed = buildDecision.getStatus(globalConfigDataForSonarInstance, checkedJobConfigData);
+            Result buildStatus = buildDecision.getStatus(globalConfigDataForSonarInstance, checkedJobConfigData);
+            boolean buildHasPassed = buildStatus == Result.SUCCESS || buildStatus == Result.UNSTABLE;
             if("".equals(jobConfigData.getSonarInstanceName()))
                 listener.getLogger().println(JobExecutionService.DEFAULT_CONFIGURATION_WARNING);
-            listener.getLogger().println("PostBuild-Step: Quality Gates plugin build passed: " + String.valueOf(buildPassed).toUpperCase());
-            return buildPassed;
+            listener.getLogger().println("PostBuild-Step: Quality Gates plugin build passed: " 
+                + String.valueOf(buildHasPassed).toUpperCase());
+            if (buildStatus == Result.UNSTABLE) {
+            	build.setResult(Result.UNSTABLE);
+            }
+            return buildHasPassed;
         } catch (QGException e) {
             e.printStackTrace(listener.getLogger());
         }

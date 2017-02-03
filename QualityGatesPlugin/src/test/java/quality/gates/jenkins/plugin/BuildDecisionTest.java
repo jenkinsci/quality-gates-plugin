@@ -7,6 +7,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+
+import hudson.model.Result;
 import quality.gates.sonar.api.QualityGatesStatus;
 
 import java.util.ArrayList;
@@ -23,7 +25,6 @@ public class BuildDecisionTest {
     @Mock
     QualityGatesProvider qualityGatesProvider;
 
-    @Mock
     QualityGatesStatus qualityGatesStatus;
 
     @Mock
@@ -42,17 +43,33 @@ public class BuildDecisionTest {
     }
 
     @Test
-    public void testGetStatusTrue() throws JSONException {
+    public void testGetStatusTrueWhenGreen() throws JSONException {
+        qualityGatesStatus = QualityGatesStatus.GREEN;
         doReturn(qualityGatesStatus).when(qualityGatesProvider).getAPIResultsForQualityGates(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
-        doReturn(true).when(qualityGatesStatus).hasStatusGreen();
-        assertTrue(buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData));
+        assertEquals(Result.SUCCESS, buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData));
     }
 
     @Test
-    public void testGetStatusFalse() throws JSONException {
+    public void testGetStatusFalseWhenGreen() throws JSONException {
+        qualityGatesStatus = QualityGatesStatus.RED;
         doReturn(qualityGatesStatus).when(qualityGatesProvider).getAPIResultsForQualityGates(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
-        doReturn(false).when(qualityGatesStatus).hasStatusGreen();
-        assertFalse(buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData));
+        assertEquals(Result.FAILURE, buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData));
+    }
+    
+    @Test
+    public void testGetStatusTrueWhenOrange() throws JSONException {
+        qualityGatesStatus = QualityGatesStatus.ORANGE;
+    	doReturn(qualityGatesStatus).when(qualityGatesProvider).getAPIResultsForQualityGates(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
+    	doReturn(true).when(jobConfigData).getIgnoreWarnings();
+    	assertEquals(Result.UNSTABLE, buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData));
+    }
+
+    @Test
+    public void testGetStatusFalseWhenOrange() throws JSONException {
+        qualityGatesStatus = QualityGatesStatus.ORANGE;
+    	doReturn(qualityGatesStatus).when(qualityGatesProvider).getAPIResultsForQualityGates(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
+    	doReturn(false).when(jobConfigData).getIgnoreWarnings();
+    	assertEquals(Result.FAILURE, buildDecision.getStatus(globalConfigDataForSonarInstance, jobConfigData));
     }
 
     @Test(expected = QGException.class)

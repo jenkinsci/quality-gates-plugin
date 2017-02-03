@@ -17,8 +17,10 @@ public class QualityGateResponseParser {
 
         String gateStatus = getValueForJSONKey(latestEventResult, "n");
         if (gateStatus.startsWith("Green"))
-            return new QualityGatesStatus("OK");
-        return new QualityGatesStatus("ERROR");
+            return QualityGatesStatus.GREEN;
+        if (gateStatus.startsWith("Orange"))
+        	return QualityGatesStatus.ORANGE;
+        return QualityGatesStatus.RED;
     }
 
     protected JSONObject getLatestEventResult(JSONArray jsonArray) throws QGException {

@@ -44,7 +44,7 @@ public class QualityGatesProviderTest {
 
     @Test
     public void testGetAPIResultsForQualityGates() throws JSONException {
-        QualityGatesStatus qualityGatesStatus = new QualityGatesStatus("OK");
+        QualityGatesStatus qualityGatesStatus = QualityGatesStatus.GREEN;
         doReturn("").when(globalConfigDataForSonarInstance).getName();
         doReturn("").when(globalConfigDataForSonarInstance).getUsername();
         doReturn("").when(globalConfigDataForSonarInstance).getPass();
@@ -59,11 +59,11 @@ public class QualityGatesProviderTest {
 
     @Test
     public void testGetAPIResultsForQualityGatesNotEqualStatuses() throws JSONException {
-        QualityGatesStatus qualityGatesStatus = new QualityGatesStatus("OK");
+        QualityGatesStatus qualityGatesStatus = QualityGatesStatus.GREEN;
         doReturn("").when(jobConfigData).getProjectKey();
         doReturn("").when(sonarHttpRequester).getAPIInfo(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
         doReturn(globalConfigDataForSonarInstance).when(sonarInstanceValidationService).validateData(globalConfigDataForSonarInstance);
-        doReturn(new QualityGatesStatus("ERROR")).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString());
+        doReturn(QualityGatesStatus.RED).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString());
 
         assertNotEquals(qualityGatesStatus, qualityGatesProvider.getAPIResultsForQualityGates(jobConfigData, globalConfigDataForSonarInstance));
     }

@@ -4,7 +4,8 @@ public class JobConfigData {
 
     private String projectKey;
     private String sonarInstanceName;
-
+    private boolean ignoreWarnings;
+    
 
     public String getProjectKey() {
         return projectKey;
@@ -21,12 +22,21 @@ public class JobConfigData {
     public void setSonarInstanceName(String sonarInstanceName) {
         this.sonarInstanceName = sonarInstanceName;
     }
+    
+    public boolean getIgnoreWarnings() {
+    	return ignoreWarnings;
+    }
+    
+    public void setIgnoreWarnings(boolean ignoreWarnings) {
+    	this.ignoreWarnings = ignoreWarnings;
+    }
 
     @Override
     public String toString() {
         return "JobConfigData{" +
                 "projectKey='" + projectKey + '\'' +
                 ", sonarInstanceName='" + sonarInstanceName + '\'' +
+                ", ignoreWarnings=" + ignoreWarnings +
                 '}';
     }
 
@@ -37,8 +47,9 @@ public class JobConfigData {
 
         JobConfigData that = (JobConfigData) o;
 
-        if (!projectKey.equals(that.projectKey)) return false;
-        return sonarInstanceName.equals(that.sonarInstanceName);
+        return projectKey.equals(that.projectKey) 
+        	&& sonarInstanceName.equals(that.sonarInstanceName)
+        	&& ignoreWarnings == that.ignoreWarnings;
     }
 
     @Override

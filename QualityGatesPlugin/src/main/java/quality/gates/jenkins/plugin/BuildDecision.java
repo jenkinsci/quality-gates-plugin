@@ -1,7 +1,11 @@
 package quality.gates.jenkins.plugin;
 
 import quality.gates.sonar.api.QualityGatesProvider;
+import quality.gates.sonar.api.QualityGatesStatus;
+
 import org.json.JSONException;
+
+import hudson.model.Result;
 
 public class BuildDecision {
 
@@ -15,9 +19,14 @@ public class BuildDecision {
         this.qualityGatesProvider = qualityGatesProvider;
     }
 
-    public boolean getStatus(GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance, JobConfigData jobConfigData) throws QGException {
+    public Result getStatus(GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance, JobConfigData jobConfigData) throws QGException {
         try {
-            return qualityGatesProvider.getAPIResultsForQualityGates(jobConfigData, globalConfigDataForSonarInstance).hasStatusGreen();
+            QualityGatesStatus qualityGate = qualityGatesProvider.getAPIResultsForQualityGates(jobConfigData, globalConfigDataForSonarInstance);
+            if (qualityGate == QualityGatesStatus.GREEN)
+            	return Result.SUCCESS;
+            if (jobConfigData.getIgnoreWarnings() && qualityGate == QualityGatesStatus.ORANGE)
+            	return Result.UNSTABLE;
+            return Result.FAILURE;
         } catch (JSONException e) {
             throw new QGException("Please check your credentials or your Project Key", e);
         }
