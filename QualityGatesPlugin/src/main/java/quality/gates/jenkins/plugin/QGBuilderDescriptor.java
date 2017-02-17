@@ -28,10 +28,13 @@ public final class QGBuilderDescriptor extends BuildStepDescriptor<Builder> {
 
     public QGBuilderDescriptor(JobExecutionService jobExecutionService, JobConfigurationService jobConfigurationService){
         super(QGBuilder.class);
+this.jobExecutionService = jobExecutionService;
         this.jobConfigurationService = jobConfigurationService;
-        this.jobExecutionService = jobExecutionService;
-    }
 
+    }
+	public JobExecutionService getJobExecutionService() {
+        return jobExecutionService;
+    }
     public ListBoxModel doFillListOfGlobalConfigDataItems() {
         return jobConfigurationService.getListOfSonarInstanceNames(jobExecutionService.getGlobalConfigData());
     }
