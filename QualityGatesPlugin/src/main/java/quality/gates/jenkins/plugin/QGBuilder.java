@@ -3,8 +3,8 @@ package quality.gates.jenkins.plugin;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.model.Result;
 import hudson.tasks.Builder;
+import jenkins.model.GlobalConfiguration;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class QGBuilder extends Builder {
@@ -47,23 +47,20 @@ public class QGBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace(listener.getLogger());
         }
+		
+        boolean buildHasPassed;
         try {
             JobConfigData checkedJobConfigData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
-            Result buildStatus = buildDecision.getStatus(globalConfigDataForSonarInstance, checkedJobConfigData);
-            boolean buildHasPassed = buildStatus == Result.SUCCESS || buildStatus == Result.UNSTABLE;
+            buildHasPassed = buildDecision.getStatus(globalConfigDataForSonarInstance, checkedJobConfigData);
             if("".equals(jobConfigData.getSonarInstanceName()))
                 listener.getLogger().println(JobExecutionService.DEFAULT_CONFIGURATION_WARNING);
-            listener.getLogger().println("Build-Step: Quality Gates plugin build passed: " 
-                + String.valueOf(buildHasPassed).toUpperCase());
-            if (buildStatus == Result.UNSTABLE) {
-            	build.setResult(Result.UNSTABLE);
-            }
+            listener.getLogger().println("Build-Step: Quality Gates plugin build passed: " + String.valueOf(buildHasPassed).toUpperCase());
             return buildHasPassed;
         }
         catch (QGException e){
@@ -76,6 +73,6 @@ public class QGBuilder extends Builder {
     public QGBuilderDescriptor getDescriptor() {
         return (QGBuilderDescriptor) super.getDescriptor();
     }
-
+	
 
 }
