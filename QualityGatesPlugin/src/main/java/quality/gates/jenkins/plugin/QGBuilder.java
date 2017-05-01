@@ -5,6 +5,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.tasks.Builder;
+import jenkins.model.GlobalConfiguration;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class QGBuilder extends Builder {
@@ -76,6 +77,6 @@ public class QGBuilder extends Builder {
     public QGBuilderDescriptor getDescriptor() {
         return (QGBuilderDescriptor) super.getDescriptor();
     }
-
+	
 
 }
