@@ -45,7 +45,7 @@ public final class QGBuilderDescriptor extends BuildStepDescriptor<Builder> {
 
     @Override
     public String getDisplayName() {
-        return "Quality Gates";
+        return "Build SonarQube Quality Gates";
     }
 
     @Override

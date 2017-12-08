@@ -39,18 +39,18 @@ public class QGBuilder extends Builder implements SimpleBuildStep {
         return jobConfigData;
     }
 
-    @Override
-    public boolean prebuild(AbstractBuild<?, ?> build, BuildListener listener) {
+    private void retrieveGlobalConfig(Run<?, ?> build, TaskListener listener) {
         globalConfigDataForSonarInstance = buildDecision.chooseSonarInstance(jobExecutionService.getGlobalConfigData(), jobConfigData);
         if(globalConfigDataForSonarInstance == null) {
             listener.error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, jobConfigData.getSonarInstanceName());
-            return false;
+            build.setResult(Result.FAILURE);
         }
-        return true;
     }
 
     @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+        retrieveGlobalConfig(build, listener);
+
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
