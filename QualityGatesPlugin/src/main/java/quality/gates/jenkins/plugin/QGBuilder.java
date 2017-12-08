@@ -1,13 +1,16 @@
 package quality.gates.jenkins.plugin;
 
+import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.model.*;
 import hudson.tasks.Builder;
+import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class QGBuilder extends Builder {
+import javax.annotation.Nonnull;
+import java.io.IOException;
+
+public class QGBuilder extends Builder implements SimpleBuildStep {
 
     private JobConfigData jobConfigData;
     private BuildDecision buildDecision;
@@ -47,7 +50,7 @@ public class QGBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
@@ -59,17 +62,18 @@ public class QGBuilder extends Builder {
             boolean buildHasPassed = buildStatus == Result.SUCCESS || buildStatus == Result.UNSTABLE;
             if("".equals(jobConfigData.getSonarInstanceName()))
                 listener.getLogger().println(JobExecutionService.DEFAULT_CONFIGURATION_WARNING);
-            listener.getLogger().println("Build-Step: Quality Gates plugin build passed: " 
-                + String.valueOf(buildHasPassed).toUpperCase());
+            listener.getLogger().println("Build-Step: Quality Gates plugin build passed: "
+                    + String.valueOf(buildHasPassed).toUpperCase());
             if (buildStatus == Result.UNSTABLE) {
-            	build.setResult(Result.UNSTABLE);
+                build.setResult(Result.UNSTABLE);
             }
-            return buildHasPassed;
+            build.setResult(determineBuildResult(buildHasPassed));
+            return;
         }
         catch (QGException e){
             e.printStackTrace(listener.getLogger());
         }
-        return false;
+        build.setResult(Result.FAILURE);
     }
 
     @Override
@@ -77,5 +81,8 @@ public class QGBuilder extends Builder {
         return (QGBuilderDescriptor) super.getDescriptor();
     }
 
-
+    private Result determineBuildResult(boolean gateResult) {
+        if (gateResult) { return Result.SUCCESS; }
+        return Result.FAILURE;
+    }
 }
