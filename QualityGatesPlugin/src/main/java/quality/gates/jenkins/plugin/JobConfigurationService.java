@@ -1,16 +1,16 @@
 package quality.gates.jenkins.plugin;
 
+import hudson.EnvVars;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.util.ListBoxModel;
+import net.sf.json.JSONObject;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import hudson.EnvVars;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.util.ListBoxModel;
-import net.sf.json.JSONObject;
 
 public class JobConfigurationService {
 
@@ -66,7 +66,7 @@ public class JobConfigurationService {
         return instanceName;
     }
 
-    public JobConfigData checkProjectKeyIfVariable(JobConfigData jobConfigData, AbstractBuild build, BuildListener listener) throws QGException {
+    public JobConfigData checkProjectKeyIfVariable(JobConfigData jobConfigData, Run<?, ?> build, TaskListener listener) throws QGException {
         String projectKey = jobConfigData.getProjectKey();
 
         if(projectKey.isEmpty()){

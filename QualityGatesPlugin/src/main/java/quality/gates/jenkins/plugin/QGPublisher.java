@@ -1,13 +1,18 @@
 
 package quality.gates.jenkins.plugin;
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
+import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class QGPublisher extends Recorder {
+import javax.annotation.Nonnull;
+import java.io.IOException;
+
+public class QGPublisher extends Recorder implements SimpleBuildStep {
 
     private JobConfigData jobConfigData;
     private BuildDecision buildDecision;
@@ -46,27 +51,27 @@ public class QGPublisher extends Recorder {
         return BuildStepMonitor.NONE;
     }
 
-    @Override
-    public boolean prebuild(AbstractBuild<?, ?> build, BuildListener listener) {
+    private void retrieveGlobalConfig(Run<?, ?> build, TaskListener listener) {
         globalConfigDataForSonarInstance = buildDecision.chooseSonarInstance(jobExecutionService.getGlobalConfigData(), jobConfigData);
         if(globalConfigDataForSonarInstance == null) {
             listener.error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, jobConfigData.getSonarInstanceName());
-            return false;
+            build.setResult(Result.FAILURE);
         }
-        return true;
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+        retrieveGlobalConfig(build, listener);
+
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace(listener.getLogger());
         }
         Result result = build.getResult();
-        if (Result.SUCCESS != result) {
+        if (Result.SUCCESS != result && null != result) {
             listener.getLogger().println("Previous steps failed the build.\nResult is: " + result);
-            return false;
+            return;
         }
         try {
             JobConfigData checkedJobConfigData = jobConfigurationService.checkProjectKeyIfVariable(jobConfigData, build, listener);
@@ -74,15 +79,24 @@ public class QGPublisher extends Recorder {
             boolean buildHasPassed = buildStatus == Result.SUCCESS || buildStatus == Result.UNSTABLE;
             if("".equals(jobConfigData.getSonarInstanceName()))
                 listener.getLogger().println(JobExecutionService.DEFAULT_CONFIGURATION_WARNING);
-            listener.getLogger().println("PostBuild-Step: Quality Gates plugin build passed: " 
-                + String.valueOf(buildHasPassed).toUpperCase());
+            listener.getLogger().println("PostBuild-Step: Quality Gates plugin build passed: "
+                    + String.valueOf(buildHasPassed).toUpperCase());
             if (buildStatus == Result.UNSTABLE) {
-            	build.setResult(Result.UNSTABLE);
+                build.setResult(Result.UNSTABLE);
+                return;
             }
-            return buildHasPassed;
+
+            build.setResult(determineBuildResult(buildHasPassed));
+            return;
         } catch (QGException e) {
             e.printStackTrace(listener.getLogger());
         }
-        return false;
+
+        build.setResult(Result.FAILURE);
+    }
+
+    private Result determineBuildResult(boolean gateResult) {
+        if (gateResult) { return Result.SUCCESS; }
+        return Result.FAILURE;
     }
 }
