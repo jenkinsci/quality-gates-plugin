@@ -51,12 +51,14 @@ public class QGPublisher extends Recorder implements SimpleBuildStep {
         return BuildStepMonitor.NONE;
     }
 
-    private void retrieveGlobalConfig(Run<?, ?> build, TaskListener listener) {
+    protected boolean retrieveGlobalConfig(Run<?, ?> build, TaskListener listener) {
         globalConfigDataForSonarInstance = buildDecision.chooseSonarInstance(jobExecutionService.getGlobalConfigData(), jobConfigData);
         if(globalConfigDataForSonarInstance == null) {
             listener.error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, jobConfigData.getSonarInstanceName());
             build.setResult(Result.FAILURE);
+            return false;
         }
+        return true;
     }
 
     @Override
