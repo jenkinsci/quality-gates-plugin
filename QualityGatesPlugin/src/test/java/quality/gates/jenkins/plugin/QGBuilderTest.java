@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -77,21 +76,21 @@ public class QGBuilderTest {
     public void testPrebuildShouldFailGlobalConfigDataInstanceIsNull() {
         doReturn(null).when(buildDecision).chooseSonarInstance(any(GlobalConfig.class), any(JobConfigData.class));
         doReturn("TestInstanceName").when(jobConfigData).getSonarInstanceName();
-        assertFalse(builder.retrieveGlobalConfig(abstractBuild, buildListener));
+        assertFalse(builder.prebuild(abstractBuild, buildListener));
         verify(buildListener).error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, "TestInstanceName");
     }
 
     @Test
     public void testPrebuildShouldPassBecauseGlobalConfigDataIsFound() {
         doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(any(GlobalConfig.class), any(JobConfigData.class));
-        assertTrue(builder.retrieveGlobalConfig(abstractBuild, buildListener));
+        assertTrue(builder.prebuild(abstractBuild, buildListener));
         verify(buildListener, never()).error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, "TestInstanceName");
     }
 
     @Test
     public void testPerformShouldPassWithNoWarning() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         String stringWithName = "Name";
         buildDecisionShouldBe(Result.SUCCESS);
@@ -105,7 +104,7 @@ public class QGBuilderTest {
     @Test
     public void testPerformShouldPassWithWarning() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         String emptyString = "";
         buildDecisionShouldBe(Result.SUCCESS);
@@ -120,7 +119,7 @@ public class QGBuilderTest {
     @Test
     public void testPerformShouldPassUnstableWithNoWarning() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         String stringWithName = "Name";
         buildDecisionShouldBe(Result.UNSTABLE);
@@ -134,7 +133,7 @@ public class QGBuilderTest {
     @Test
     public void testPerformShouldPassUnstableWithWarning() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         String emptyString = "";
         buildDecisionShouldBe(Result.UNSTABLE);
@@ -150,7 +149,7 @@ public class QGBuilderTest {
     @Test
     public void testPerformShouldFailWithNoWarning() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         String stringWithName = "Name";
         buildDecisionShouldBe(Result.FAILURE);
@@ -165,7 +164,7 @@ public class QGBuilderTest {
     @Test
     public void testPerformShouldFailWithWarning() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         String emptyString = "";
         buildDecisionShouldBe(Result.FAILURE);
@@ -180,7 +179,7 @@ public class QGBuilderTest {
     @Test
     public void testPerformThrowsException() throws QGException, IOException, InterruptedException {
         QGBuilder builderSpy = Mockito.spy(builder);
-        Mockito.doReturn(true).when(builderSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(builderSpy).prebuild(abstractBuild, buildListener);
 
         QGException exception = mock(QGException.class);
         when(buildDecision.getStatus(any(GlobalConfigDataForSonarInstance.class), any(JobConfigData.class))).thenThrow(exception);

@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,21 +80,21 @@ public class QGPublisherTest {
     public void testPrebuildShouldFail() {
         doReturn(null).when(buildDecision).chooseSonarInstance(any(GlobalConfig.class), any(JobConfigData.class));
         doReturn("TestInstanceName").when(jobConfigData).getSonarInstanceName();
-        assertFalse(publisher.retrieveGlobalConfig(abstractBuild, buildListener));
+        assertFalse(publisher.prebuild(abstractBuild, buildListener));
         verify(buildListener).error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, "TestInstanceName");
     }
 
     @Test
     public void testPrebuildShouldPassBecauseGlobalConfigDataIsFound() {
         doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(any(GlobalConfig.class), any(JobConfigData.class));
-        assertTrue(publisher.retrieveGlobalConfig(abstractBuild, buildListener));
+        assertTrue(publisher.prebuild(abstractBuild, buildListener));
         verify(buildListener, never()).error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, "TestInstanceName");
     }
 
     @Test
     public void testPerformBuildResultFail() throws IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.FAILURE);
         buildDecisionShouldBe(Result.FAILURE);
@@ -108,7 +107,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultSuccessWithWarningForDefaultInstance() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         buildDecisionShouldBe(Result.SUCCESS);
@@ -123,7 +122,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultSuccessWithNoWarning() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         buildDecisionShouldBe(Result.SUCCESS);
@@ -138,7 +137,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultUnstableWithWarningForDefaultInstance() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         buildDecisionShouldBe(Result.UNSTABLE);
@@ -154,7 +153,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultUnstableWithNoWarning() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         buildDecisionShouldBe(Result.UNSTABLE);
@@ -170,7 +169,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultFailWithWarningForDefaultInstance() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         buildDecisionShouldBe(Result.FAILURE);
@@ -185,7 +184,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformBuildResultFailWithNoWarning() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         buildDecisionShouldBe(Result.FAILURE);
@@ -199,7 +198,7 @@ public class QGPublisherTest {
     @Test
     public void testPerformThrowsException() throws QGException, IOException, InterruptedException {
         QGPublisher publisherSpy = Mockito.spy(publisher);
-        Mockito.doReturn(true).when(publisherSpy).retrieveGlobalConfig(abstractBuild, buildListener);
+        Mockito.doReturn(true).when(publisherSpy).prebuild(abstractBuild, buildListener);
 
         setBuildResult(Result.SUCCESS);
         QGException exception = mock(QGException.class);
