@@ -2,7 +2,9 @@ package quality.gates.jenkins.plugin;
 
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
