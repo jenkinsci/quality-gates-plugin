@@ -7,11 +7,13 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.inject.Inject;
 
+@Symbol("qualityGatesPublish")
 @Extension
 public final class QGPublisherDescriptor extends BuildStepDescriptor<Publisher> {
 
