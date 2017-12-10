@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -71,17 +74,17 @@ public class QGBuilderTest {
     }
 
     @Test
-    public void testPrebuildShouldFailGlobalConfigDataInstanceIsNull() throws IOException, InterruptedException {
+    public void testPrebuildShouldFailGlobalConfigDataInstanceIsNull() {
         doReturn(null).when(buildDecision).chooseSonarInstance(any(GlobalConfig.class), any(JobConfigData.class));
         doReturn("TestInstanceName").when(jobConfigData).getSonarInstanceName();
-        builder.perform(abstractBuild, filePath, launcher, buildListener);
+        assertFalse(builder.retrieveGlobalConfig(abstractBuild, buildListener));
         verify(buildListener).error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, "TestInstanceName");
     }
 
     @Test
-    public void testPrebuildShouldPassBecauseGlobalConfigDataIsFound() throws IOException, InterruptedException {
+    public void testPrebuildShouldPassBecauseGlobalConfigDataIsFound() {
         doReturn(globalConfigDataForSonarInstance).when(buildDecision).chooseSonarInstance(any(GlobalConfig.class), any(JobConfigData.class));
-        builder.perform(abstractBuild, filePath, launcher, buildListener);
+        assertTrue(builder.retrieveGlobalConfig(abstractBuild, buildListener));
         verify(buildListener, never()).error(JobExecutionService.GLOBAL_CONFIG_NO_LONGER_EXISTS_ERROR, "TestInstanceName");
     }
 
