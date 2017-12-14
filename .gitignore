@@ -22,5 +22,6 @@ SonarQualityGatesJenkinsPlugin/SonarQualityGatesJenkinsPlugin.iml
 .idea/sonar-quality-gates-jenkins-plugin.iml
 .idea/vcs.xml
 .idea/workspace.xml
+.idea/
 /.sonar
 /*.properties

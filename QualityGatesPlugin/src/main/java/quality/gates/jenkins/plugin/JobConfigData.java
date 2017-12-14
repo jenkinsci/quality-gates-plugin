@@ -1,11 +1,21 @@
 package quality.gates.jenkins.plugin;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 public class JobConfigData {
 
     private String projectKey;
     private String sonarInstanceName;
     private boolean ignoreWarnings;
-    
+
+    @DataBoundConstructor
+    public JobConfigData(String projectKey, String sonarInstanceName, boolean ignoreWarnings) {
+        this.projectKey = projectKey;
+        this.sonarInstanceName = sonarInstanceName;
+        this.ignoreWarnings = ignoreWarnings;
+    }
+
+    public JobConfigData() {}
 
     public String getProjectKey() {
         return projectKey;

@@ -7,11 +7,13 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.inject.Inject;
 
+@Symbol("qualityGatesPublish")
 @Extension
 public final class QGPublisherDescriptor extends BuildStepDescriptor<Publisher> {
 
@@ -54,7 +56,7 @@ public final class QGPublisherDescriptor extends BuildStepDescriptor<Publisher> 
 
     @Override
     public String getDisplayName() {
-        return "Quality Gates";
+        return "Publish SonarQube Quality Gates";
     }
 
     @Override
