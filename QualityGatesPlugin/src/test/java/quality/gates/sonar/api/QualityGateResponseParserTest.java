@@ -8,6 +8,8 @@ import org.junit.Test;
 import quality.gates.jenkins.plugin.QGException;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -22,52 +24,98 @@ public class QualityGateResponseParserTest {
     private QualityGateResponseParser qualityGateResponseParser;
 
     private String jsonArrayString;
+    private String jsonObjectString;
 
     @Before
     public void init() {
         qualityGateResponseParser = new QualityGateResponseParser();
         jsonArrayString = "[\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Green (was Red)\",\nc: \"Alert\",\ndt: \"2016-03-25T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
+        jsonObjectString = "{paging:{pageIndex:1,pageSize:100,total:2},analyses:[{key:\"AWDWWzYlMRo0rJ7-ewqe\",date:\"2018-01-08T15:19:33+0000\",events:[{key:\"AWDWW0VGMRo0rJ7-ewqf\",category:\"QUALITY_GATE\",name:\"Green (was Orange)\",description:\"Vulnerabilities > 2\"},{key:\"AWDWW0VMMRo0rJ7-ewqg\",category:\"VERSION\",name:\"1.0.0-SNAPSHOT\"}]},{key:\"AWDVgjN8MRo0rJ7-ewmz\",date:\"2018-01-08T11:22:20+0000\",events:[{key:\"AWDVgkzGMRo0rJ7-ewqZ\",category:\"QUALITY_GATE\",name:\"Orange\",description:\"Vulnerabilities > 2\"}]}]}";
     }
 
 
     @Test
-    public void testGetQualityGateResultFromJSONWithOneObjectShouldReturnStatusError() {
-        String jsonArray = "[\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
-        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArray));
+    public void testGetQualityGateResultFromJSONWithOneObjectShouldReturnStatusErrorNewAPI() {
+        String jsonObject = "{paging:{pageIndex:1,pageSize:100,total:2},analyses:[{key:\"AWDWWzYlMRo0rJ7-ewqe\",date:\"2018-01-08T15:19:33+0000\",events:[{key:\"AWDWW0VGMRo0rJ7-ewqf\",category:\"QUALITY_GATE\",name:\"Red (was Orange)\",description:\"Vulnerabilities > 2\"},{key:\"AWDWW0VMMRo0rJ7-ewqg\",category:\"VERSION\",name:\"1.0.0-SNAPSHOT\"}]},{key:\"AWDVgjN8MRo0rJ7-ewmz\",date:\"2018-01-08T11:22:20+0000\",events:[{key:\"AWDVgkzGMRo0rJ7-ewqZ\",category:\"QUALITY_GATE\",name:\"Orange\",description:\"Vulnerabilities > 2\"}]}]}";
+        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonObject, true));
+    }
+    
+    @Test
+    public void testGetQualityGateResultFromJSONWithOneObjectShouldReturnStatusErrorOldAPI() {
+        String jsonArray = "[\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Orange)\",\nc: \"Alert\",\ndt: \"2016-03-25T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
+        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArray, false));
     }
 
     @Test
-    public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusOK() {
-        assertEquals(QualityGatesStatus.GREEN, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString));
+    public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusOKNewAPI() {
+        assertEquals(QualityGatesStatus.GREEN, qualityGateResponseParser.getQualityGateResultFromJSON(jsonObjectString, true));
+    }
+    
+    @Test
+    public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusOKOldAPI() {
+        assertEquals(QualityGatesStatus.GREEN, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString, false));
     }
 
     @Test
-    public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusError() {
-        jsonArrayString = "[\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Red)\",\nc: \"Alert\",\ndt: \"2016-03-26T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Green (was Red)\",\nc: \"Alert\",\ndt: \"2016-03-25T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
-        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString));
+    public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusErrorNewAPI() {
+        jsonObjectString = "{paging:{pageIndex:1,pageSize:100,total:2},analyses:[{key:\"AWDWWzYlMRo0rJ7-ewqe\",date:\"2018-01-08T15:19:33+0000\",events:[{key:\"AWDWW0VGMRo0rJ7-ewqf\",category:\"QUALITY_GATE\",name:\"Red (was Orange)\",description:\"Vulnerabilities > 2\"},{key:\"AWDWW0VMMRo0rJ7-ewqg\",category:\"VERSION\",name:\"1.0.0-SNAPSHOT\"}]},{key:\"AWDVgjN8MRo0rJ7-ewmz\",date:\"2018-01-08T11:22:20+0000\",events:[{key:\"AWDVgkzGMRo0rJ7-ewqZ\",category:\"QUALITY_GATE\",name:\"Orange\",description:\"Vulnerabilities > 2\"}]}]}";
+        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonObjectString, true));
+    }
+    
+    @Test
+    public void testGetQualityGateResultFromJSONWithMultipleObjectsShouldReturnStatusErrorOldAPI() {
+        jsonArrayString = "[\n{\nid: \"455\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Orange)\",\nc: \"Alert\",\ndt: \"2016-03-25T12:01:31+0100\",\nds: \"\"\n},\n{\nid: \"430\",\nrk: \"com.opensource:quality-gates\",\nn: \"Red (was Green)\",\nc: \"Alert\",\ndt: \"2016-03-24T16:28:40+0100\",\nds: \"Major issues variation > 2 over 30 days (2016 Mar 15), Coverage variation < 60 since previous analysis (2016 Mar 24)\"\n}]";
+        assertEquals(QualityGatesStatus.RED, qualityGateResponseParser.getQualityGateResultFromJSON(jsonArrayString, false));
     }
 
 
     @Test
     public void testGetLatestEventResultWhenFirstObjectIsntWithLatestDate() throws JSONException {
-        JSONArray array = new JSONArray();
-        JSONObject firstJsonObject = new JSONObject();
-        firstJsonObject.put("id", "455");
-        firstJsonObject.put("rk", COM_OPENSOURCE_QUALITY_GATES);
-        firstJsonObject.put("n", GREEN_WAS_RED);
-        firstJsonObject.put("c", ALERT);
-        firstJsonObject.put(DT, T12_01_31_0100);
-        firstJsonObject.put("ds", "");
-        JSONObject secondJsonObject = new JSONObject();
-        secondJsonObject.put("id", "456");
-        secondJsonObject.put("rk", COM_OPENSOURCE_QUALITY_GATES);
-        secondJsonObject.put("n", GREEN_WAS_RED);
-        secondJsonObject.put("c", ALERT);
-        secondJsonObject.put(DT,  "2016-03-26T12:01:31+0100");
-        secondJsonObject.put("ds", "");
-        array.put(firstJsonObject);
-        array.put(secondJsonObject);
-        assertEquals(secondJsonObject.toString(), qualityGateResponseParser.getLatestEventResult(array).toString());
+        
+        JSONObject jsonObject = new JSONObject();
+        
+        JSONObject paging = new JSONObject();
+        paging.put("pageIndex", 1);
+        paging.put("pageSize", 100);
+        paging.put("total", 2);
+        
+        JSONArray analyses = new JSONArray();
+        
+        JSONObject analysis1 = new JSONObject();
+        analysis1.put("key", "AWDWWzYlMRo0rJ7-ewqe");
+        analysis1.put("date", "2018-01-08T15:19:33+0000");
+        JSONArray events1 = new JSONArray();
+        JSONObject ev1 = new JSONObject();
+        ev1.put("key", "AWDWW0VGMRo0rJ7-ewqf");
+        ev1.put("category", "QUALITY_GATE");
+        ev1.put("name", "Red");
+        ev1.put("description", "Vulnerabilities > 2");
+        events1.put(ev1);
+        JSONObject ev2 = new JSONObject();
+        ev2.put("key", "AWDWW0VMMRo0rJ7-ewqg");
+        ev2.put("category", "VERSION");
+        ev2.put("name", "1.0.0-SNAPSHOT");
+        events1.put(ev2);
+        analysis1.put("events", events1);
+        analyses.put(analysis1);
+        
+        JSONObject analysis2 = new JSONObject();
+        analysis2.put("key", "AWDWWzYlMRo0rJ7-ewqe");
+        analysis2.put("date", "2018-01-08T11:22:20+0000");
+        JSONArray events2 = new JSONArray();
+        JSONObject ev3 = new JSONObject();
+        ev3.put("key", "AWDVgkzGMRo0rJ7-ewqZ");
+        ev3.put("category", "QUALITY_GATE");
+        ev3.put("name", "Orange");
+        ev3.put("description", "Vulnerabilities > 2");
+        events2.put(ev3);
+        analysis2.put("events", events2);
+        analyses.put(analysis2);
+        
+        jsonObject.put("paging", paging);
+        jsonObject.put("analyses", analyses);
+        
+        assertEquals(ev1.toString(), qualityGateResponseParser.getLastestEventResultNewAPI(jsonObject).toString());
     }
 
     @Test
@@ -154,6 +202,28 @@ public class QualityGateResponseParserTest {
         String expected = T12_01_31_0100;
         String actual = qualityGateResponseParser.getValueForJSONKey(jsonObject, "dateeee");
         assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testFromISO8601UTC() {
+    	String date = "2018-01-08T15:19:33+0100";
+    	Date result = qualityGateResponseParser.fromISO8601UTC(date);
+    	Calendar cal = Calendar.getInstance();
+    	
+    	cal.setTime(result);
+    	
+    	assertEquals(2018,  cal.get(Calendar.YEAR));
+    	assertEquals(0, cal.get(Calendar.MONTH));
+    	assertEquals(8, cal.get(Calendar.DAY_OF_MONTH));
+    	assertEquals(15, cal.get(Calendar.HOUR_OF_DAY));
+    	assertEquals(19, cal.get(Calendar.MINUTE));
+    }
+    
+    @Test(expected = QGException.class)
+    public void testFromISO8601UTCInvalidFormat() {
+    	String invalidDate = "2018/01/08";
+    	qualityGateResponseParser.fromISO8601UTC(invalidDate);
+    	
     }
 
 }
