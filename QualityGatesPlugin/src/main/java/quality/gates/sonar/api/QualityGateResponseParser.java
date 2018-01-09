@@ -5,21 +5,40 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import quality.gates.jenkins.plugin.QGException;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+
+import javax.print.attribute.standard.DateTimeAtCompleted;
 
 public class QualityGateResponseParser {
 
-    public QualityGatesStatus getQualityGateResultFromJSON(String jsonString) throws QGException {
-        JSONArray resultArray = createJSONArrayFromString(jsonString);
+    public QualityGatesStatus getQualityGateResultFromJSON(String jsonString, boolean isNewAPI) throws QGException {
+        
+    	JSONObject latestEventResult;
+    	String fieldName;
+    	if(isNewAPI) {
+    		JSONObject resultObject = createJSONObjectFromString(jsonString);
+    		latestEventResult = getLastestEventResultNewAPI(resultObject);
+    		fieldName = "name";
+    	} else {
+    		JSONArray resultArray = createJSONArrayFromString(jsonString);
+    		latestEventResult = getLatestEventResult(resultArray);
+    		fieldName = "n";
+    	}
 
-        JSONObject latestEventResult = getLatestEventResult(resultArray);
-
-        String gateStatus = getValueForJSONKey(latestEventResult, "n");
-        if (gateStatus.startsWith("Green"))
+        String gateStatus = getValueForJSONKey(latestEventResult, fieldName);
+        if (gateStatus.startsWith("Green")) {
             return QualityGatesStatus.GREEN;
+        }
         if (gateStatus.startsWith("Orange"))
+        {
         	return QualityGatesStatus.ORANGE;
+        }
         return QualityGatesStatus.RED;
     }
 
@@ -48,6 +67,38 @@ public class QualityGateResponseParser {
 
         return returnObject;
     }
+    
+    protected JSONObject getLastestEventResultNewAPI(JSONObject jsonObject) throws QGException {
+    	JSONObject returnObject = createObjectWithStatusGreenNewAPI();
+    	    	
+    	if(jsonObject.has("analyses")) {
+    		JSONArray analyses = getJSONArrayFromObject(jsonObject,"analyses");
+    		
+    		Date lastDate = new Date(0);
+    		
+    		for( int i=0; i<analyses.length(); i++) {
+    			JSONObject currentAnalysis = getJSONObjectFromArray(analyses, i);
+    			if(currentAnalysis.has("events")) {
+    				Date analysisDate = fromISO8601UTC(getValueForJSONKey(currentAnalysis, "date"));
+    				if(lastDate.compareTo(analysisDate) < 0) {
+    					JSONArray events = getJSONArrayFromObject(currentAnalysis,"events");
+    					for (int j=0; j<events.length(); j++) {
+        					JSONObject currentEvent = getJSONObjectFromArray(events,j);
+        					if("QUALITY_GATE".equals(getValueForJSONKey(currentEvent, "category"))) {
+        						lastDate = analysisDate;
+        						returnObject = currentEvent;
+        						break;
+        					}
+        				}
+    				}
+    			}
+    		}
+    	} else {
+    		throw new QGException("The request returned an empty object");
+    	}
+    	
+    	return returnObject;
+    }
 
     protected JSONObject createObjectWithStatusGreen() {
         try {
@@ -60,6 +111,18 @@ public class QualityGateResponseParser {
             throw new QGException(e);
         }
     }
+    
+    protected JSONObject createObjectWithStatusGreenNewAPI() {
+    	try {
+    		JSONObject returnObject = new JSONObject();
+    		returnObject.put("key", "1");
+    		returnObject.put("category", "QUALITY_GATE");
+    		returnObject.put("name", "Green");
+    		return returnObject;
+    	} catch (JSONException e) {
+    		throw new QGException(e);
+    	}
+    }
 
     protected JSONObject getJSONObjectFromArray(JSONArray array, int index) throws QGException {
         try {
@@ -67,6 +130,14 @@ public class QualityGateResponseParser {
         } catch (JSONException e) {
             throw new QGException("The request returned an empty array", e);
         }
+    }
+    
+    protected JSONArray getJSONArrayFromObject(JSONObject object, String key) throws QGException {
+    	try {
+    		return object.getJSONArray(key);
+    	} catch (JSONException e) {
+    		throw new QGException("The request returned an empty object", e);
+    	}
     }
 
     protected String getValueForJSONKey(List<JSONObject> array, int index, String key) throws QGException {
@@ -91,5 +162,26 @@ public class QualityGateResponseParser {
         } catch (JSONException e) {
             throw new QGException("There was a problem handling the JSON response " + jsonString, e);
         }
+    }
+    
+    protected JSONObject createJSONObjectFromString(String jsonString) throws QGException {
+    	try {
+    		return new JSONObject(jsonString);
+    	} catch (JSONException e) {
+    		throw new QGException("There was a problem handling the JSON response "+jsonString, e);
+    	}
+    }
+    
+    protected Date fromISO8601UTC(String dateStr) throws QGException {
+    	TimeZone tz = TimeZone.getTimeZone("UTC");
+    	DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    	    	
+    	df.setTimeZone(tz);
+    	try {
+    	    return df.parse(dateStr);
+    	  } catch (ParseException e) {
+    		  throw new QGException("There was a problem parsing the JSON date "+dateStr, e);
+    	  }
+
     }
 }

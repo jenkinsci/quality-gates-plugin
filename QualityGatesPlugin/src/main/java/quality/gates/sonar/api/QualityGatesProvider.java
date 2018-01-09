@@ -26,11 +26,24 @@ public class QualityGatesProvider {
 
     public QualityGatesStatus getAPIResultsForQualityGates(JobConfigData jobConfigData, GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance) throws JSONException {
         GlobalConfigDataForSonarInstance validatedData = sonarInstanceValidationService.validateData(globalConfigDataForSonarInstance);
-        String requesterResult = getRequesterResult(jobConfigData, validatedData);
-        return qualityGateResponseParser.getQualityGateResultFromJSON(requesterResult);
+        
+        Float sonarVersion = sonarHttpRequester.getSonarQubeVersion(globalConfigDataForSonarInstance);
+
+        boolean useNewAPI = false;
+        if(sonarVersion >= 6.3) {
+        	useNewAPI = true;
+        }
+        
+        String requesterResult = getRequesterResult(jobConfigData, validatedData, useNewAPI);
+        return qualityGateResponseParser.getQualityGateResultFromJSON(requesterResult, useNewAPI);
     }
 
-    public String getRequesterResult(JobConfigData jobConfigData, GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance) throws QGException {
-        return sonarHttpRequester.getAPIInfo(jobConfigData, globalConfigDataForSonarInstance);
+    public String getRequesterResult(JobConfigData jobConfigData, GlobalConfigDataForSonarInstance globalConfigDataForSonarInstance, boolean useNewAPI) throws QGException {
+        
+    	if(useNewAPI) {
+    		return sonarHttpRequester.getAPIInfoNew(jobConfigData, globalConfigDataForSonarInstance);
+    	} else {
+    		return sonarHttpRequester.getAPIInfo(jobConfigData, globalConfigDataForSonarInstance);
+    	}
     }
 }

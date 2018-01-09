@@ -10,6 +10,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -37,18 +38,40 @@ public class SonarHttpRequesterIT {
         assertTrue("OK".equals(result));
     }
 
+    @Test
+    public void testGetSonarQubeVersionNew() {
+    	int status = 200;
+    	String versionNumber = "6.7.0.33306";
+    	Float version = getVersionResponse(status, versionNumber);
+    	assertEquals(new Float(6.7), version);
+    }
+    
+    @Test
+    public void testGetSonarQubeVersionOld() {
+    	int status = 200;
+    	String versionNumber = "5.6";
+    	Float version = getVersionResponse(status, versionNumber);
+    	assertEquals(new Float(5.6), version);
+    }
+    
     private String getResponse(int status) {
         String projectKey = "com.opensource:quality-gates";
 
-        stubFor(get(urlPathEqualTo("/api/events"))
-                .withQueryParam("resource", equalTo(projectKey))
-                .withQueryParam("format", equalTo("json"))
-                .withQueryParam("categories", equalTo("Alert"))
+        stubFor(get(urlPathEqualTo("/api/project_analyses/search"))
+                .withQueryParam("project", equalTo(projectKey))
+                .withQueryParam("category", equalTo("QUALITY_GATE"))
                 .willReturn(aResponse()
                         .withStatus(status).withBody("OK")));
 
         JobConfigData jobConfigData = new JobConfigData();
         jobConfigData.setProjectKey(projectKey);
-        return sonarHttpRequester.getAPIInfo(jobConfigData, globalConfigDataForSonarInstance);
+        return sonarHttpRequester.getAPIInfoNew(jobConfigData, globalConfigDataForSonarInstance);
+    }
+    
+    private Float getVersionResponse(int status, String versionNumber) {
+    	stubFor(get(urlPathEqualTo("/api/server/version"))
+    			.willReturn(aResponse().withStatus(status).withBody(versionNumber)));
+    	
+    	return sonarHttpRequester.getSonarQubeVersion(globalConfigDataForSonarInstance);
     }
 }
