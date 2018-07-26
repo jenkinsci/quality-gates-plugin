@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 
 public class JobConfigurationService {
 
-    private static final Pattern ENV_VARIABLE_WITH_BRACES_PATTERN = Pattern.compile( "(\\$\\{[a-zA-Z_]+\\})" );
-    private static final Pattern ENV_VARIABLE_WITHOUT_BRACES_PATTERN = Pattern.compile( "(\\$[a-zA-Z_]+)" );
+    private static final Pattern ENV_VARIABLE_WITH_BRACES_PATTERN = Pattern.compile( "(\\$\\{[a-zA-Z_]+[a-zA-Z0-9_\\.-]*\\})" );
+    private static final Pattern ENV_VARIABLE_WITHOUT_BRACES_PATTERN = Pattern.compile( "(\\$[a-zA-Z_]+[a-zA-Z0-9_\\.-]*)" );
 
     public ListBoxModel getListOfSonarInstanceNames(GlobalConfig globalConfig) {
         ListBoxModel listBoxModel = new ListBoxModel();
