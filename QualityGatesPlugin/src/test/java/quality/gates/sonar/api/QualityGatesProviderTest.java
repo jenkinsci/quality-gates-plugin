@@ -43,7 +43,7 @@ public class QualityGatesProviderTest {
     }
 
     @Test
-    public void testGetAPIResultsForQualityGates() throws JSONException {
+    public void testGetAPIResultsForQualityGatesNewAPI() throws JSONException {
         QualityGatesStatus qualityGatesStatus = QualityGatesStatus.GREEN;
         doReturn("").when(globalConfigDataForSonarInstance).getName();
         doReturn("").when(globalConfigDataForSonarInstance).getUsername();
@@ -52,7 +52,22 @@ public class QualityGatesProviderTest {
         doReturn("").when(jobConfigData).getProjectKey();
         doReturn("").when(sonarHttpRequester).getAPIInfo(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
         doReturn(globalConfigDataForSonarInstance).when(sonarInstanceValidationService).validateData(globalConfigDataForSonarInstance);
-        doReturn(qualityGatesStatus).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString());
+        doReturn(qualityGatesStatus).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString(), Boolean.valueOf(anyString()));
+
+        assertEquals(qualityGatesStatus, qualityGatesProvider.getAPIResultsForQualityGates(jobConfigData, globalConfigDataForSonarInstance));
+    }
+    
+    @Test
+    public void testGetAPIResultsForQualityGatesOldAPI() throws JSONException {
+        QualityGatesStatus qualityGatesStatus = QualityGatesStatus.GREEN;
+        doReturn("").when(globalConfigDataForSonarInstance).getName();
+        doReturn("").when(globalConfigDataForSonarInstance).getUsername();
+        doReturn("").when(globalConfigDataForSonarInstance).getPass();
+        doReturn("").when(globalConfigDataForSonarInstance).getSonarUrl();
+        doReturn("").when(jobConfigData).getProjectKey();
+        doReturn("").when(sonarHttpRequester).getAPIInfo(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
+        doReturn(globalConfigDataForSonarInstance).when(sonarInstanceValidationService).validateData(globalConfigDataForSonarInstance);
+        doReturn(qualityGatesStatus).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString(), Boolean.valueOf(anyString()));
 
         assertEquals(qualityGatesStatus, qualityGatesProvider.getAPIResultsForQualityGates(jobConfigData, globalConfigDataForSonarInstance));
     }
@@ -63,7 +78,7 @@ public class QualityGatesProviderTest {
         doReturn("").when(jobConfigData).getProjectKey();
         doReturn("").when(sonarHttpRequester).getAPIInfo(any(JobConfigData.class), any(GlobalConfigDataForSonarInstance.class));
         doReturn(globalConfigDataForSonarInstance).when(sonarInstanceValidationService).validateData(globalConfigDataForSonarInstance);
-        doReturn(QualityGatesStatus.RED).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString());
+        doReturn(QualityGatesStatus.RED).when(qualityGateResponseParser).getQualityGateResultFromJSON(anyString(), Boolean.valueOf(anyString()));
 
         assertNotEquals(qualityGatesStatus, qualityGatesProvider.getAPIResultsForQualityGates(jobConfigData, globalConfigDataForSonarInstance));
     }
